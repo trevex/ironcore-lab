@@ -1,0 +1,11 @@
+/.direnv
+# build artifacts
+/result
+/build
+# terraform
+/.terraform
+terraform.tfstate
+*.tfstate*
+# all random locks, except flake
+*.lock
+!flake.lock
