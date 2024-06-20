@@ -1,8 +1,10 @@
 terraform {
   required_providers {
     libvirt = {
-      source = "dmacvicar/libvirt"
-      version = "0.7.6"
+      # fork to hack in ipv6 nat support
+      # (the lengths to go through to not touch xml :-) )
+      source = "trevex/libvirt"
+      version = "0.1.5"
     }
   }
 }
@@ -16,7 +18,7 @@ resource "libvirt_network" "internal" {
   name = "internal-net"
   mode = "open"
   domain = "ironcore.local"
-  addresses = ["fc00:dead:beef::/64"]
+  addresses = ["fd00:dead:beef::/64"] # first address is used by host
 
   dns {
     enabled = false
@@ -32,7 +34,7 @@ resource "libvirt_network" "uplink" {
   name = "uplink-net"
   mode = "nat"
   domain = "uplink.local"
-  addresses = ["192.168.50.0/24"]
+  addresses = ["192.168.50.0/24", "fc00:cafe::/64"]
 }
 
 
@@ -60,6 +62,7 @@ resource "libvirt_domain" "router" {
   network_interface {
     network_name   = libvirt_network.uplink.name
     wait_for_lease = true
+    addresses = ["192.168.50.50"]
   }
 
   network_interface {
@@ -184,7 +187,8 @@ resource "libvirt_domain" "talos2" {
   }
 
   disk {
-    file = local.talos_iso
+    # file = local.talos_iso
+    file = "${abspath(path.root)}/test.iso"
   }
 
   disk {

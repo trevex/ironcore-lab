@@ -9,3 +9,4 @@ terraform.tfstate
 # all random locks, except flake
 *.lock
 !flake.lock
+/test.iso

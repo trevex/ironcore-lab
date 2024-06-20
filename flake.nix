@@ -29,7 +29,7 @@
             gnumake
 
             qemu
-            opentofu
+            terraform
 
             kubectl
             kubernetes-helm

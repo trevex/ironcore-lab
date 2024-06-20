@@ -1,5 +1,8 @@
 { inputs, lib, pkgs, config,  ... }:
 {
+  # ens3: uplink
+  # ens4: internal
+
   boot.kernel.sysctl = {
     "net.ipv4.conf.all.forwarding" = 1;
     "net.ipv6.conf.all.forwarding" = 1;
@@ -8,24 +11,50 @@
     "net.ipv6.conf.ens4.accept_ra" = 0;
   };
 
-
   networking = {
     firewall.enable = false; # Let's keep it simple for now...
-    # tempAddresses = "disabled";
+    tempAddresses = "disabled";
     nat = {
       enable = true;
       enableIPv6 = true;
-      internalInterfaces = [ "ens4" ];
       externalInterface = "ens3";
+      internalInterfaces = [ "ens4" ];
     };
+    interfaces = {
+      ens4.ipv6.addresses = [{
+        address = "fd00:dead:beef::2"; # first one is host, second is ours
+        prefixLength = 64;
+      }];
+    };
+    # defaultGateway6 = {
+    #   address = "fe80::1";
+    #   interface = "ens3";
+    # };
   };
 
-  # ens3: uplink
-  # ens4: internal
-  networking.interfaces.ens4.ipv6.addresses = [ {
-    address = "fd00:dead:beef::1";
-    prefixLength = 64;
-  }];
+  services.tayga = {
+    enable = true;
+    ipv4 = {
+      address = "192.168.100.0";
+      router = {
+        address = "192.168.100.1";
+      };
+      pool = {
+        address = "192.168.100.0";
+        prefixLength = 24;
+      };
+    };
+    ipv6 = {
+      address = "2001:db8::1";
+      router = {
+        address = "64:ff9b::1";
+      };
+      pool = {
+        address = "64:ff9b::";
+        prefixLength = 96;
+      };
+    };
+  };
 
   services.coredns = {
     enable = true;
@@ -35,6 +64,9 @@
         log
         errors
         cache
+        dns64 {
+          allow_ipv4
+        }
       }
     '';
   };
@@ -46,39 +78,17 @@
         address = "localhost:9430";
         prometheus = true;
       };
-      interfaces = [
-        {
-          name = "ens4";
-          advertise = true;
-          prefix = [{ prefix = "::/64"; }];
-          rdnss = [{ servers = ["::"]; }];
-          route = [{ prefix = "::/0"; }];
-          # prefix = [{ prefix = "fc00:dead:beef::/64"; }];
-          # rdnss = [{ servers = ["fc00:dead:beef::1"]; }];
-          # route = [{ prefix = "::/0"; }, { prefix = "fc00:dead:beef::1/64"; }];
-        }
-      ];
+      interfaces = [{
+        name = "ens3";
+        monitor = false;
+        advertise = false;
+      } {
+        name = "ens4";
+        advertise = true;
+        prefix = [{ prefix = "::/64"; }];
+        rdnss = [{ servers = ["::"]; }];
+        route = [{ prefix = "::/0"; }];
+      }];
     };
   };
-
-  # services.dnsmasq.enable = true;
-  # services.dnsmasq.alwaysKeepRunning = true;
-  # services.dnsmasq.settings = {
-  #   log-dhcp = true;
-  #   log-queries = true;
-  #   log-debug = true;
-  #   log-facility = "/var/log/dnsmasq.log";
-
-  #   no-resolv = true;
-  #   enable-ra = true;
-  #   dhcp-authoritative = true;
-  #   interface = "ens4";
-  #   dhcp-range= [ "::2, constructor:ens4, ra-names, 12h" ];
-  #   dhcp-option = [
-  #     # "3,192.168.200.2" # Gateway
-  #     # "6,192.168.200.2" # DNS servers
-  #     # "option:ntp-server,192.168.200.2"
-  #     # "option:dns-server,192.168.200.2"
-  #   ];
-  # };
 }

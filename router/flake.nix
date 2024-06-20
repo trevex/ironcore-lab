@@ -25,36 +25,6 @@
       });
     in
     {
-      # nixosModules.origin = { config, ... }: {
-      #   imports = [
-      #     nixos-generators.nixosModules.all-formats
-      #   ];
-
-      #   nixpkgs.hostPlatform = "x86_64-linux";
-
-      #   # # customize an existing format
-      #   # formatConfigs.vmware = { config, ... }: {
-      #   #   services.openssh.enable = true;
-      #   # };
-
-      #   # # define a new format
-      #   # formatConfigs.my-custom-format = { config, modulesPath, ... }: {
-      #   #   imports = [ "${toString modulesPath}/installer/cd-dvd/installation-cd-base.nix" ];
-      #   #   formatAttr = "isoImage";
-      #   #   fileExtension = ".iso";
-      #   #   networking.wireless.networks = {
-      #   #     # ...
-      #   #   };
-      #   # };
-
-      #   # the evaluated machine
-      #   nixosConfigurations.origin = nixpkgs.lib.nixosSystem {
-      #     modules = [ self.nixosModules.origin ];
-      #   };
-      # };
-      # overlays.default = final: prev: {
-      #   prefetched-images = self.packages."x86_64-linux".prefetched-images;
-      # };
       packages = forAllSystems ({ system, pkgs }:
       let
         mkIso = modules: nixos-generators.nixosGenerate {
@@ -72,6 +42,7 @@
         };
       in {
         iso = mkIso [ ./configuration.nix ./router.nix ];
+        test = mkIso [ ./configuration.nix ];
       });
     };
 }

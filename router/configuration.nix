@@ -14,7 +14,7 @@
         command = "ALL" ;
         options= [ "NOPASSWD" ];
       }];
-  }];
+    }];
 
   environment.systemPackages = with pkgs; [
     gptfdisk
