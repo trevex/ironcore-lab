@@ -3,6 +3,15 @@
  <xsl:output omit-xml-declaration="yes" indent="yes"/>
  <xsl:strip-space elements="*"/>
 
+<xsl:template match="forward[not(nat)]">
+ <forward mode='nat'>
+  <nat ipv6='yes'>
+   <port start='1024' end='65535'/>
+  </nat>
+ <xsl:apply-templates/>
+ </forward>
+</xsl:template>
+
  <xsl:template match="node()|@*">
   <xsl:copy>
    <xsl:apply-templates select="node()|@*"/>
