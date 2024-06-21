@@ -1,10 +1,7 @@
 terraform {
   required_providers {
     libvirt = {
-      # fork to hack in ipv6 nat support
-      # (the lengths to go through to not touch xml :-) )
-      source = "trevex/libvirt"
-      version = "0.1.5"
+      source = "dmacvicar/libvirt"
     }
   }
 }
@@ -35,6 +32,10 @@ resource "libvirt_network" "uplink" {
   mode = "nat"
   domain = "uplink.local"
   addresses = ["192.168.50.0/24", "fc00:cafe::/64"]
+
+  xml {
+    xslt = file("${path.root}/natipv6.xslt")
+  }
 }
 
 

@@ -16,7 +16,7 @@ INIT_LOCK ?= .init.lock
 
 .PHONY: clean
 clean:
-	terraform destroy -auto-approve
+	tofu destroy -auto-approve
 	rm .init.lock
 	sudo rm -rf build # requires sudo due to libvirt volumes
 
@@ -24,7 +24,7 @@ clean:
 init: $(INIT_LOCK)
 $(INIT_LOCK):
 	mkdir -p build
-	terraform init
+	tofu init
 	touch $(INIT_LOCK)
 
 .PHONY: talos-iso
@@ -39,10 +39,10 @@ $(ROUTER_ISO): router/flake.nix router/flake.lock
 
 .PHONY: setup
 setup: init talos-iso router-iso
-	terraform apply -auto-approve
+	tofu apply -auto-approve
 
 .PHONY: recreate-router
 recreate-router: router-iso
-	terraform taint libvirt_domain.router
-	terraform apply -auto-approve
+	tofu taint libvirt_domain.router
+	tofu apply -auto-approve
 

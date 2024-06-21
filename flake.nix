@@ -29,7 +29,9 @@
             gnumake
 
             qemu
-            terraform
+            opentofu
+            libxslt # required for libvirt provider
+            tcpdump
 
             kubectl
             kubernetes-helm
