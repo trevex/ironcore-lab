@@ -35,7 +35,7 @@ $(TALOS_ISO): init
 .PHONY: router-iso
 router-iso: $(ROUTER_ISO)
 $(ROUTER_ISO): router/flake.nix router/flake.lock
-	nix build ./router#packages.x86_64-linux.router-iso
+	nix build ./router#packages.x86_64-linux.router-vm-iso
 
 .PHONY: setup
 setup: init talos-iso router-iso
@@ -46,3 +46,6 @@ recreate-router: router-iso
 	tofu taint libvirt_domain.router
 	tofu apply -auto-approve
 
+.PHONY: install-iso
+install-iso:
+	nix build ./router#packages.x86_64-linux.install-hw-iso

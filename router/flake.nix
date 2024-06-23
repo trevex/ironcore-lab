@@ -27,9 +27,9 @@
     {
       packages = forAllSystems ({ system, pkgs }:
       let
-        mkFormat = format: modules: nixos-generators.nixosGenerate {
+        mkFormat = format: vars: modules: nixos-generators.nixosGenerate {
           inherit system format;
-          specialArgs = { flake = self; };
+          specialArgs = { inherit vars; flake = self; };
           modules = [
             # Pin nixpkgs to the flake input, so that the packages installed
             # come from the flake inputs.nixpkgs.url.
@@ -41,9 +41,9 @@
           ] ++ modules;
         };
       in {
-        router-iso = mkFormat "iso" [ ./configuration.nix ./router.nix ];
-        router-raw = mkFormat "raw-efi" [ ./configuration.nix ./router.nix ./raw-tweaks.nix ];
-        install-iso = mkFormat "iso" [ ./configuration.nix ./install.nix ];
+        router-vm-iso = mkFormat "iso" { externalInterface = "ens3"; internalInterface = "ens4"; } [ ./configuration.nix ./router.nix ];
+        router-hw-raw = mkFormat "raw-efi" { externalInterface = "enp1s0"; internalInterface = "enp3s0"; } [ ./configuration.nix ./router.nix ./raw-tweaks.nix ];
+        install-hw-iso = mkFormat "iso" {} [ ./configuration.nix ./install.nix ];
       });
     };
 }

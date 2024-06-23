@@ -1,14 +1,11 @@
-{ inputs, lib, pkgs, config,  ... }:
+{ inputs, lib, pkgs, config, vars, ... }:
 {
-  # ens3: uplink
-  # ens4: internal
-
   boot.kernel.sysctl = {
     "net.ipv4.conf.all.forwarding" = 1;
     "net.ipv6.conf.all.forwarding" = 1;
     "net.ipv6.conf.all.accept_ra" = 0;
-    "net.ipv6.conf.ens3.accept_ra" = 0;
-    "net.ipv6.conf.ens4.accept_ra" = 0;
+    "net.ipv6.conf.${vars.externalInterface}.accept_ra" = 0;
+    "net.ipv6.conf.${vars.internalInterface}.accept_ra" = 0;
   };
 
   networking = {
@@ -17,18 +14,18 @@
     nat = {
       enable = true;
       enableIPv6 = true;
-      externalInterface = "ens3";
-      internalInterfaces = [ "ens4" ];
+      externalInterface = vars.externalInterface;
+      internalInterfaces = [ vars.internalInterface ];
     };
     interfaces = {
-      ens4.ipv6.addresses = [{
+      "${vars.internalInterface}".ipv6.addresses = [{
         address = "fd00:dead:beef::2"; # first one is host, second is ours
         prefixLength = 64;
       }];
     };
     # defaultGateway6 = {
     #   address = "fe80::1";
-    #   interface = "ens3";
+    #   interface = vars.externalInterface;
     # };
   };
 
@@ -79,11 +76,11 @@
         prometheus = true;
       };
       interfaces = [{
-        name = "ens3";
+        name = vars.externalInterface;
         monitor = false;
         advertise = false;
       } {
-        name = "ens4";
+        name = vars.internalInterface;
         advertise = true;
         prefix = [{ prefix = "::/64"; }];
         rdnss = [{ servers = ["::"]; }];
