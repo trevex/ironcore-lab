@@ -189,7 +189,7 @@ resource "libvirt_domain" "talos2" {
 
   disk {
     # file = local.talos_iso
-    file = "${abspath(path.root)}/test.iso"
+    file = "${abspath(path.root)}/install.iso"
   }
 
   disk {

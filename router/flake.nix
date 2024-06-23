@@ -27,8 +27,9 @@
     {
       packages = forAllSystems ({ system, pkgs }:
       let
-        mkIso = modules: nixos-generators.nixosGenerate {
-          inherit system;
+        mkFormat = format: modules: nixos-generators.nixosGenerate {
+          inherit system format;
+          specialArgs = { flake = self; };
           modules = [
             # Pin nixpkgs to the flake input, so that the packages installed
             # come from the flake inputs.nixpkgs.url.
@@ -38,11 +39,11 @@
               system.stateVersion = "23.11";
             }
           ] ++ modules;
-          format = "iso";
         };
       in {
-        iso = mkIso [ ./configuration.nix ./router.nix ];
-        test = mkIso [ ./configuration.nix ];
+        router-iso = mkFormat "iso" [ ./configuration.nix ./router.nix ];
+        router-raw = mkFormat "raw-efi" [ ./configuration.nix ./router.nix ./raw-tweaks.nix ];
+        install-iso = mkFormat "iso" [ ./configuration.nix ./install.nix ];
       });
     };
 }

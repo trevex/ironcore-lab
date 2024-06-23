@@ -10,3 +10,5 @@ terraform.tfstate
 *.lock
 !flake.lock
 /test.iso
+*.iso
+*.img

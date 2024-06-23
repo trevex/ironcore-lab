@@ -31,7 +31,9 @@
             qemu
             opentofu
             libxslt # required for libvirt provider
+
             tcpdump
+            wireshark
 
             kubectl
             kubernetes-helm

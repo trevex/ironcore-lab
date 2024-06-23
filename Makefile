@@ -35,7 +35,7 @@ $(TALOS_ISO): init
 .PHONY: router-iso
 router-iso: $(ROUTER_ISO)
 $(ROUTER_ISO): router/flake.nix router/flake.lock
-	nix build ./router#packages.x86_64-linux.iso
+	nix build ./router#packages.x86_64-linux.router-iso
 
 .PHONY: setup
 setup: init talos-iso router-iso
