@@ -22,14 +22,10 @@ in
     };
     interfaces = {
       "${vars.internalInterface}".ipv6.addresses = [{
-        address = "fd00:dead:beef::2"; # first one is host, second is ours
+        address = "fd00:dead:beef::2"; # in a VM ::1 will be taken by bridge
         prefixLength = 64;
       }];
     };
-    # defaultGateway6 = {
-    #   address = "fe80::1";
-    #   interface = vars.externalInterface;
-    # };
   };
 
   services.tayga = {

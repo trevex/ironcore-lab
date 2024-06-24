@@ -1,6 +1,6 @@
 SHELL := bash
 
-TALOS_URL  ?= 'https://github.com/siderolabs/talos/releases/download/v1.7.4/metal-amd64.iso'
+TALOS_URL  ?= 'https://github.com/siderolabs/talos/releases/download/v1.7.5/metal-amd64.iso'
 TALOS_ISO  ?= build/talos-amd64.iso
 ROUTER_ISO ?= result/iso/nixos.iso
 

@@ -42,7 +42,7 @@
         };
       in {
         router-vm-iso = mkFormat "iso" { externalInterface = "ens3"; internalInterface = "ens4"; } [ ./configuration.nix ./router.nix ];
-        router-hw-raw = mkFormat "raw-efi" { externalInterface = "enp1s0"; internalInterface = "enp3s0"; } [ ./configuration.nix ./router.nix ./raw-tweaks.nix ];
+        router-hw-raw = mkFormat "raw-efi" { externalInterface = "enp1s0"; internalInterface = "enp3s0"; } [ ./configuration.nix ./router.nix ./raw-tweaks.nix ./openssh.nix ];
         install-hw-iso = mkFormat "iso" {} [ ./configuration.nix ./install.nix ];
       });
     };
