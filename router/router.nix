@@ -1,4 +1,7 @@
 { inputs, lib, pkgs, config, vars, ... }:
+let
+  tunDevice = "nat64";
+in
 {
   boot.kernel.sysctl = {
     "net.ipv4.conf.all.forwarding" = 1;
@@ -15,7 +18,7 @@
       enable = true;
       enableIPv6 = true;
       externalInterface = vars.externalInterface;
-      internalInterfaces = [ vars.internalInterface ];
+      internalInterfaces = [ vars.internalInterface tunDevice ];
     };
     interfaces = {
       "${vars.internalInterface}".ipv6.addresses = [{
@@ -31,6 +34,7 @@
 
   services.tayga = {
     enable = true;
+    tunDevice = tunDevice;
     ipv4 = {
       address = "192.168.100.0";
       router = {
@@ -85,6 +89,7 @@
         prefix = [{ prefix = "::/64"; }];
         rdnss = [{ servers = ["::"]; }];
         route = [{ prefix = "::/0"; }];
+        pref64 = [{ prefix = "64:ff9b::/96"; }];
       }];
     };
   };
