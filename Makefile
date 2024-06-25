@@ -48,4 +48,22 @@ recreate-router: router-iso
 
 .PHONY: install-iso
 install-iso:
-	nix build ./router#packages.x86_64-linux.install-hw-iso
+	nix build --impure ./router#packages.x86_64-linux.install-hw-iso
+
+.PHONY: wg-gen-keys
+wg-gen-keys:
+	umask 077
+	mkdir -p wg
+	wg genkey > wg/server.key
+	wg pubkey < wg/server.key > wg/server.pub
+	wg genkey > wg/client.key
+	wg pubkey < wg/client.key > wg/client.pub
+	# TODO: generate client.conf
+
+.PHONY: wg-up
+wg-up:
+	wg-quick up wg/wg0.conf
+
+.PHONY: wg-down
+wg-down:
+	wg-quick down wg/wg0.conf

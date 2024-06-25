@@ -12,3 +12,4 @@ terraform.tfstate
 /test.iso
 *.iso
 *.img
+/wg

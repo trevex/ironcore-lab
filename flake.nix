@@ -34,6 +34,7 @@
 
             tcpdump
             wireshark
+            wireguard-tools
 
             kubectl
             kubernetes-helm
