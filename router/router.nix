@@ -1,92 +1,59 @@
-{ inputs, lib, pkgs, config, vars, ... }:
-let
-  tunDevice = "nat64";
-in
+{ lib, pkgs, config, ... }:
 {
-  boot.kernel.sysctl = {
-    "net.ipv4.conf.all.forwarding" = 1;
-    "net.ipv6.conf.all.forwarding" = 1;
-    "net.ipv6.conf.all.accept_ra" = 0;
-    "net.ipv6.conf.${vars.externalInterface}.accept_ra" = 0;
-    "net.ipv6.conf.${vars.internalInterface}.accept_ra" = 0;
-  };
+  # Tweak to use correct tty
+  boot.kernelParams = [ "console=tty0" ];
 
-  networking = {
-    firewall.enable = false; # Let's keep it simple for now...
-    tempAddresses = "disabled";
-    nat = {
+  # NOTE: The following would be required if testing install process in a VM:
+  # boot.initrd.kernelModules = [
+  #   "virtio_blk"
+  #   "virtio_pmem"
+  #   "virtio_console"
+  #   "virtio_pci"
+  #   "virtio_mmio"
+  # ];
+
+  defaultUser = "test";
+
+  router = {
+    enable = true;
+    externalInterface = "ens4s0";
+    internalInterface = "ens3s0";
+    internalAddress = "fd00::beef::2";
+    openssh = {
       enable = true;
-      enableIPv6 = true;
-      externalInterface = vars.externalInterface;
-      internalInterfaces = [ vars.internalInterface tunDevice ];
+      authorizedKeys = [
+        "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGcKW01TP/gVI1KaExyrOMnnj7HUQ58Pa40r4nKGVQ8f niklas.voss@gmail.com"
+      ];
     };
-    interfaces = {
-      "${vars.internalInterface}".ipv6.addresses = [{
-        address = "fd00:dead:beef::2"; # in a VM ::1 will be taken by bridge
-        prefixLength = 64;
-      }];
-    };
-  };
+    wireguard = {
+      enable = true;
+      address = "fdcc:cafe::1/64";
+      privateKey = builtins.readFile "${builtins.getEnv "PWD"}/wg/server.key";
 
-  services.tayga = {
-    enable = true;
-    tunDevice = tunDevice;
-    ipv4 = {
-      address = "192.168.100.0";
-      router = {
-        address = "192.168.100.1";
-      };
-      pool = {
-        address = "192.168.100.0";
-        prefixLength = 24;
-      };
-    };
-    ipv6 = {
-      address = "2001:db8::1";
-      router = {
-        address = "64:ff9b::1";
-      };
-      pool = {
-        address = "64:ff9b::";
-        prefixLength = 96;
-      };
-    };
-  };
-
-  services.coredns = {
-    enable = true;
-    config = ''
-      .:53 {
-        forward . 8.8.8.8
-        log
-        errors
-        cache
-        dns64 {
-          allow_ipv4
+      peers = [
+        {
+          publicKey = builtins.readFile "${builtins.getEnv "PWD"}/wg/client.pub";
+          allowedIPs = [ "fdcc:cafe::2/128" ];
         }
-      }
-    '';
-  };
-
-  services.corerad = {
-    enable = true;
-    settings = {
-      debug = {
-        address = "localhost:9430";
-        prometheus = true;
-      };
-      interfaces = [{
-        name = vars.externalInterface;
-        monitor = false;
-        advertise = false;
-      } {
-        name = vars.internalInterface;
-        advertise = true;
-        prefix = [{ prefix = "::/64"; }];
-        rdnss = [{ servers = ["::"]; }];
-        route = [{ prefix = "::/0"; }];
-        pref64 = [{ prefix = "64:ff9b::/96"; }];
-      }];
+      ];
     };
   };
+
+  # some utility packages to debug things...
+  environment.systemPackages = with pkgs; [
+    gptfdisk
+    vim
+    git
+    ripgrep
+    curl
+    moreutils
+    unzip
+    htop
+    fd
+    dig
+    openssl
+    tcpdump
+    inetutils
+  ];
 }
+

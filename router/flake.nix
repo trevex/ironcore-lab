@@ -1,49 +1,94 @@
 {
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    nixpkgs.url = "nixpkgs/24.05";
+    nixpkgs-unstable.url = "nixpkgs/nixpkgs-unstable";
     nixos-generators = {
       url = "github:nix-community/nixos-generators";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    deploy-rs.url = "github:serokell/deploy-rs";
   };
-
-  outputs = { self, nixpkgs, nixos-generators, ... }:
-    let
-      allSystems = [ "x86_64-linux" ]; # "aarch64-linux"
-      mkPkgs = system:  pkgs: overlays: import pkgs {
-        inherit system;
-        config.allowUnfree = true;
-        overlays = overlays;
+  outputs = inputs @ { self, nixpkgs, nixpkgs-unstable, nixos-generators, deploy-rs, ... }:
+  let
+    system = "x86_64-linux";
+    vars = {
+      defaultUser = "router";
+      externalInterface = "";
+      externalIP = "";
+      internalInterface = "";
+      internalIP = "";
+      nat64 = {
+        tunDevice = "nat64";
       };
-      forAllSystems = f: nixpkgs.lib.genAttrs allSystems (system: f {
-        inherit system;
-        pkgs = mkPkgs system nixpkgs [
-          (final: prev: {
-            images = self.packages."${system}";
-          })
-        ];
-      });
-    in
-    {
-      packages = forAllSystems ({ system, pkgs }:
-      let
-        mkFormat = format: vars: modules: nixos-generators.nixosGenerate {
-          inherit system format;
-          specialArgs = { inherit vars; flake = self; };
-          modules = [
-            # Pin nixpkgs to the flake input, so that the packages installed
-            # come from the flake inputs.nixpkgs.url.
-            ({ ... }: { nix.registry.nixpkgs.flake = nixpkgs; })
-            {
-              nixpkgs.pkgs = pkgs;
-              system.stateVersion = "23.11";
-            }
-          ] ++ modules;
-        };
-      in {
-        router-vm-iso = mkFormat "iso" { externalInterface = "ens3"; internalInterface = "ens4"; } [ ./configuration.nix ./router.nix ];
-        router-hw-raw = mkFormat "raw-efi" { externalInterface = "enp1s0"; internalInterface = "enp3s0"; } [ ./configuration.nix ./router.nix ./raw-tweaks.nix ./openssh.nix ./wireguard.nix ];
-        install-hw-iso = mkFormat "iso" {} [ ./configuration.nix ./install.nix ];
-      });
     };
+
+    mkPkgs = pkgs: overlays: import pkgs {
+      inherit system;
+      config.allowUnfree = true;
+      overlays = overlays;
+    };
+    pkgs = mkPkgs nixpkgs (lib.attrValues self.overlays);
+    pkgs' = mkPkgs nixpkgs-unstable [ ];
+
+    overlay =
+      final: prev: {
+        unstable = pkgs';
+      };
+
+    lib = nixpkgs.lib;
+
+    mkHost = hostModules: lib.nixosSystem {
+      inherit system;
+      specialArgs = { inherit inputs system; flake = self; };
+
+      modules = [
+        {
+          imports = [
+            nixos-generators.nixosModules.all-formats
+            ./modules/default-user.nix
+            ./modules/hardware-configuration.nix
+            ./modules/router.nix
+          ];
+          nixpkgs.pkgs = pkgs;
+          system.stateVersion = "24.05";
+          nix = {
+            package = pkgs.nixFlakes;
+            extraOptions = "experimental-features = nix-command flakes";
+            settings = {
+              allowed-users = [ "@wheel" ];
+              trusted-users = [ "@wheel" ];
+            };
+          };
+
+          formatConfigs.raw-efi = { config, ... }: {
+            hardwareConfiguration.enable = false;
+          };
+
+          formatConfigs.iso = { config, ... }: {
+            hardwareConfiguration.enable = false;
+          };
+        }
+      ] ++ (lib.lists.forEach hostModules (hm: import hm));
+    };
+  in {
+    overlays.default = overlay;
+
+    nixosConfigurations = {
+      router = mkHost [ ./router.nix ];
+      installer = mkHost [ ./installer.nix ];
+    };
+
+    deploy.nodes.router = {
+      hostname = "192.168.1.131";
+      profiles.system = {
+        user = "root";
+        remoteBuild = true;
+        sshUser = "test";
+        magicRollback = false;
+        path = deploy-rs.lib.x86_64-linux.activate.nixos self.nixosConfigurations.router;
+      };
+    };
+
+    checks = builtins.mapAttrs (system: deployLib: deployLib.deployChecks self.deploy) deploy-rs.lib;
+  };
 }

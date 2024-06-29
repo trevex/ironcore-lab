@@ -58,7 +58,18 @@ wg-gen-keys:
 	wg pubkey < wg/server.key > wg/server.pub
 	wg genkey > wg/client.key
 	wg pubkey < wg/client.key > wg/client.pub
-	# TODO: generate client.conf
+
+.PHONY: wg-conf
+wg-conf:
+	@echo "[Interface]"
+	@echo "Address = fdcc:cafe::2/128"
+	@echo "PrivateKey = $$(cat wg/client.key)"
+	@echo ""
+	@echo "[Peer]"
+	@echo "PublicKey = $$(cat wg/server.pub)"
+	@echo "Endpoint = 192.168.1.131:51820"
+	@echo "AllowedIPs = fd00:dead:beef::/64"
+	@echo "PersistentKeepalive = 21"
 
 .PHONY: wg-up
 wg-up:
@@ -67,3 +78,17 @@ wg-up:
 .PHONY: wg-down
 wg-down:
 	wg-quick down wg/wg0.conf
+
+
+WC_NODE1 := fd00:dead:beef:0:6a1d:efff:fe45:2893
+
+.PHONY: wc-gen
+wc-gen:
+	mkdir -p workload-cluster
+	cd workload-cluster; \
+	talosctl gen secrets; \
+	talosctl gen config workload-cluster https://[$(WC_NODE1)]:6443 --with-secrets ./secrets.yaml --install-disk /dev/sdb --config-patch @../talos-machine-patch.yaml
+
+wc-install-node1:
+	cd workload-cluster; \
+	talosctl apply-config --insecure -n $(WC_NODE1) -e $(WC_NODE1) --file controlplane.yaml

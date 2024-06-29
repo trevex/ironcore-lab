@@ -6,13 +6,29 @@ let
     ''
     #!/usr/bin/env bash
     set -euxo pipefail
-    dd if=${flake.packages.x86_64-linux.router-hw-raw}/nixos.img of=$1 bs=64K conv=noerror,sync
+    dd if=${flake.nixosConfigurations.router.config.formats.raw-efi} of=$1 bs=64K conv=noerror,sync
     '';
 in
 {
 
+  defaultUser = "installer";
+
   # TODO: can also be systemd service for unattended install, see link above...
   environment.systemPackages = with pkgs; [
     install-router-to-disk
+    # some utility packages to debug things...
+    gptfdisk
+    vim
+    git
+    ripgrep
+    curl
+    moreutils
+    unzip
+    htop
+    fd
+    dig
+    openssl
+    tcpdump
+    inetutils
   ];
 }

@@ -36,6 +36,8 @@
             wireshark
             wireguard-tools
 
+            deploy-rs
+
             kubectl
             kubernetes-helm
             kind
