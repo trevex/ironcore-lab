@@ -16,8 +16,8 @@
 
   router = {
     enable = true;
-    externalInterface = "ens4s0";
-    internalInterface = "ens3s0";
+    externalInterface = "enp4s0";
+    internalInterface = "enp3s0";
     internalAddress = "fd00::beef::2";
     openssh = {
       enable = true;
