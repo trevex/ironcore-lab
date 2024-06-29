@@ -16,9 +16,9 @@
 
   router = {
     enable = true;
-    externalInterface = "enp4s0";
+    externalInterface = "enp1s0";
     internalInterface = "enp3s0";
-    internalAddress = "fd00::beef::2";
+    internalAddress = "fd00:cafe::2";
     openssh = {
       enable = true;
       authorizedKeys = [
@@ -27,13 +27,13 @@
     };
     wireguard = {
       enable = true;
-      address = "fdcc:cafe::1/64";
+      address = "fddd:cafe::1/64";
       privateKey = builtins.readFile "${builtins.getEnv "PWD"}/wg/server.key";
 
       peers = [
         {
           publicKey = builtins.readFile "${builtins.getEnv "PWD"}/wg/client.pub";
-          allowedIPs = [ "fdcc:cafe::2/128" ];
+          allowedIPs = [ "fddd:cafe::2/128" ];
         }
       ];
     };
