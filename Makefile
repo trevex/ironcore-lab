@@ -77,3 +77,19 @@ wc-gen:
 wc-node1-install:
 	cd workload-cluster; \
 	talosctl apply-config --insecure -n $(WC_NODE1) -e $(WC_NODE1) --file controlplane.yaml
+
+wc-node1-bootstrap:
+	cd workload-cluster; \
+	talosctl bootstrap --talosconfig ./talosconfig -n $(WC_NODE1) -e $(WC_NODE1)
+
+wc-node1-dmesg:
+	cd workload-cluster; \
+	talosctl dmesg --talosconfig ./talosconfig -n $(WC_NODE1) -e $(WC_NODE1)
+
+wc-kubeconfig:
+	cd workload-cluster; \
+ 	talosctl kubeconfig --talosconfig ./talosconfig  -n $(WC_NODE1) -e $(WC_NODE1)
+
+wc-install-calico:
+	kubectl create -f https://raw.githubusercontent.com/projectcalico/calico/v3.28.0/manifests/tigera-operator.yaml
+	kubectl create -f calico-installation.yaml

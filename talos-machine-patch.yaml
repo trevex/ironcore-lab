@@ -1,5 +1,5 @@
 machine:
-  network:
+  network: # TODO: vip or lb?
     nameservers:
       - "fd00:cafe::2"
     interfaces:
@@ -7,3 +7,20 @@ machine:
         routes:
           - network: "64:ff9b::/96"
             gateway: "fd00:cafe::2"
+  sysctls: # not sure if required in talos, but to play it safe...
+    net.ipv6.conf.all.forwarding : "1"
+    net.bridge.bridge-nf-call-ip6tables: "1"
+  time:
+    servers:
+      - time.google.com
+  certSANs: # WHY IS THIS NECESSARY :(
+    - fd00:cafe::6a1d:efff:fe45:2893
+cluster:
+  network:
+    cni:
+      name: none
+    dnsDomain: workload-cluster.local
+    podSubnets:
+      - fd01:cafe::/64
+    serviceSubnets:
+      - fd02:cafe::/108

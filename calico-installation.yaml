@@ -1,0 +1,12 @@
+apiVersion: operator.tigera.io/v1
+kind: Installation
+metadata:
+  name: default
+spec:
+  calicoNetwork:
+    ipPools:
+      - blockSize: 122
+        cidr: fd01:cafe::/64
+        encapsulation: None
+        natOutgoing: Enabled
+        nodeSelector: all()
