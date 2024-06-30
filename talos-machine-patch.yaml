@@ -1,4 +1,9 @@
 machine:
   network:
     nameservers:
-      - "fd00:dead:beef::2"
+      - "fd00:cafe::2"
+    interfaces:
+      - interface: enp3s0
+        routes:
+          - network: "64:ff9b::/96"
+            gateway: "fd00:cafe::2"

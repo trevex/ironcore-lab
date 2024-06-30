@@ -2,14 +2,11 @@
 # build artifacts
 /result
 /build
-# terraform
-/.terraform
-terraform.tfstate
-*.tfstate*
+/wg
+/workload-cluster
 # all random locks, except flake
 *.lock
 !flake.lock
 /test.iso
 *.iso
 *.img
-/wg

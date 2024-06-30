@@ -27,17 +27,9 @@
             gnugrep
             gnused
             gnumake
-
-            qemu
-            opentofu
-            libxslt # required for libvirt provider
-
-            tcpdump
-            wireshark
             wireguard-tools
 
             deploy-rs
-
             kubectl
             kubernetes-helm
             kind
