@@ -1,7 +1,10 @@
 SHELL := bash
 
-TALOS_URL  ?= 'https://github.com/siderolabs/talos/releases/download/v1.7.5/metal-amd64.iso'
+TALOS_URL  ?= 'https://factory.talos.dev/image/9b9d04697ed5de58fc4c774ec057175229923b9838deef77b838954829c944ab/v1.7.5/metal-amd64.iso'
 TALOS_ISO  ?= build/talos-amd64.iso
+WC_APISERVER_HOST := fd00:cafe::2
+WC_APISERVER_PORT := 6443
+WC_APISERVER := https://[$(WC_APISERVER_HOST)]:$(WC_APISERVER_PORT)
 WC_NODE1 := fd00:cafe::6a1d:efff:fe45:2893
 
 ifneq ("$(wildcard $(TALOS_ISO))","")
@@ -17,7 +20,7 @@ endif
 
 .PHONY: talos-iso
 talos-iso: $(TALOS_ISO)
-$(TALOS_ISO): init
+$(TALOS_ISO):
 	curl -L $(TALOS_URL) $(TALOS_CURL_ZFLAG) -o $(TALOS_ISO)
 
 .PHONY: router-raw
@@ -72,7 +75,7 @@ wc-gen:
 	mkdir -p workload-cluster
 	cd workload-cluster; \
 	talosctl gen secrets; \
-	talosctl gen config workload-cluster https://[$(WC_NODE1)]:6443 --with-secrets ./secrets.yaml --install-disk /dev/sdb --config-patch @../talos-machine-patch.yaml
+	talosctl gen config workload-cluster $(WC_APISERVER) --with-secrets ./secrets.yaml --install-disk /dev/sdb --config-patch @../talos-machine-patch.yaml
 
 wc-node1-install:
 	cd workload-cluster; \
@@ -92,4 +95,13 @@ wc-kubeconfig:
 
 wc-install-calico:
 	kubectl create -f https://raw.githubusercontent.com/projectcalico/calico/v3.28.0/manifests/tigera-operator.yaml
+	kubectl create configmap -n tigera-operator kubernetes-services-endpoint --from-literal=KUBERNETES_SERVICE_HOST=$(WC_APISERVER_HOST) --from-literal=KUBERNETES_SERVICE_PORT=$(WC_APISERVER_PORT)
 	kubectl create -f calico-installation.yaml
+
+wc-install-spegel:
+	kubectl create ns spegel
+	kubectl label namespace spegel pod-security.kubernetes.io/enforce=privileged
+	helm upgrade --namespace spegel --install --version v0.0.23 spegel oci://ghcr.io/spegel-org/helm-charts/spegel --set spegel.containerdRegistryConfigPath="/etc/cri/conf.d/hosts"
+	# TODO: add toleration (for now taint was removed)
+
+

@@ -4,9 +4,16 @@ metadata:
   name: default
 spec:
   calicoNetwork:
+    bgp: Enabled
+    # TODO: waiting for https://github.com/projectcalico/calico/issues/7892
+    # linuxDataplane: BPF
+    nodeAddressAutodetectionV4: {}
+    nodeAddressAutodetectionV6:
+      kubernetes: NodeInternalIP
     ipPools:
       - blockSize: 122
         cidr: fd01:cafe::/64
+        disableBGPExport: false
         encapsulation: None
         natOutgoing: Enabled
         nodeSelector: all()

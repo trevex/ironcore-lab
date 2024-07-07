@@ -11,16 +11,6 @@
   outputs = inputs @ { self, nixpkgs, nixpkgs-unstable, nixos-generators, deploy-rs, ... }:
   let
     system = "x86_64-linux";
-    vars = {
-      defaultUser = "router";
-      externalInterface = "";
-      externalIP = "";
-      internalInterface = "";
-      internalIP = "";
-      nat64 = {
-        tunDevice = "nat64";
-      };
-    };
 
     mkPkgs = pkgs: overlays: import pkgs {
       inherit system;

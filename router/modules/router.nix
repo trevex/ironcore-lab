@@ -63,6 +63,16 @@ let
       };
     };
   };
+  apiserverProxyOpts = {
+    options = {
+      enable = mkEnableOption "Apiserver Proxy (HAProxy)";
+      endpoints = mkOption {
+        default = [];
+        example = [ "fd00::1:6443" "fd00::1:6443" ];
+        type = with types; listOf str;
+      };
+    };
+  };
 in
 {
   options = {
@@ -98,6 +108,10 @@ in
 
       wireguard = mkOption {
         type = types.submodule wireguardOpts;
+      };
+
+      apiserverProxy = mkOption {
+        type = types.submodule apiserverProxyOpts;
       };
     };
   };
@@ -224,6 +238,39 @@ in
       };
     };
 
+
+    # Proxy
+    services.haproxy = {
+      enable = cfg.apiserverProxy.enable;
+      config = let
+        servers = lib.strings.concatLines (lib.imap1 (n: x: "server apiserver-${builtins.toString n} ${x} check") cfg.apiserverProxy.endpoints);
+      in ''
+      frontend apiserver
+        bind ${cfg.internalAddress}:6443
+        mode tcp
+        option tcplog
+        default_backend apiserver
+
+      backend apiserver
+        mode tcp
+        option tcplog
+        option tcp-check
+        balance roundrobin
+        default-server inter 10s downinter 5s rise 2 fall 2 slowstart 60s maxconn 250 maxqueue 256 weight 100
+        ${servers}
+      '';
+    };
+
+    # NTP
+    services.ntpd-rs = {
+      enable = true;
+      settings = {
+        server = [{
+          listen = "[${cfg.internalAddress}]:123";
+        }];
+        synchronization.local-stratum = 17;
+      };
+    };
   };
 }
 

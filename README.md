@@ -66,4 +66,8 @@ ssh test@192.168.1.131
 ssh test@fd00:dead:beef::2
 ```
 
+## TODO
+
+* nixos-anywhere
+* document talos image factory
 

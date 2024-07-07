@@ -1,0 +1,3 @@
+customization:
+    extraKernelArgs:
+        - ip=:::::enp3s0::[fd00:cafe::2]::[fd00:cafe::2]

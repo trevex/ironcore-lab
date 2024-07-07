@@ -1,21 +1,26 @@
 machine:
-  network: # TODO: vip or lb?
+  network: # TODO: Test VIP
     nameservers:
       - "fd00:cafe::2"
     interfaces:
       - interface: enp3s0
-        routes:
-          - network: "64:ff9b::/96"
-            gateway: "fd00:cafe::2"
-  sysctls: # not sure if required in talos, but to play it safe...
+        dhcpOptions:
+          ipv4: false
+  sysctls:
     net.ipv6.conf.all.forwarding : "1"
     net.bridge.bridge-nf-call-ip6tables: "1"
   time:
     servers:
-      - time.google.com
-  certSANs: # WHY IS THIS NECESSARY :(
+      - "fd00:cafe::2"
+  certSANs:
     - fd00:cafe::6a1d:efff:fe45:2893
 cluster:
+  apiServer:
+    certSANs:
+      - fd00:cafe::2
+  # TODO: waiting for https://github.com/projectcalico/calico/issues/7892
+  # proxy:
+  #   disabled: true
   network:
     cni:
       name: none

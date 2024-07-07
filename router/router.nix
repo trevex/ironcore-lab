@@ -37,6 +37,12 @@
         }
       ];
     };
+    apiserverProxy = {
+      enable = true;
+      endpoints = [
+        "[fd00:cafe::6a1d:efff:fe45:2893]:6443"
+      ];
+    };
   };
 
   # some utility packages to debug things...
