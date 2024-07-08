@@ -6,6 +6,8 @@ WC_APISERVER_HOST := fd00:cafe::2
 WC_APISERVER_PORT := 6443
 WC_APISERVER := https://[$(WC_APISERVER_HOST)]:$(WC_APISERVER_PORT)
 WC_NODE1 := fd00:cafe::6a1d:efff:fe45:2893
+WC_NODE2 := fd00:cafe::6a1d:efff:fe3e:ee0c
+WC_NODE3 := fd00:cafe::6a1d:efff:fe3f:90cc
 
 ifneq ("$(wildcard $(TALOS_ISO))","")
 	TALOS_CURL_ZFLAG := -z $(TALOS_ISO)
@@ -89,6 +91,14 @@ wc-node1-dmesg:
 	cd workload-cluster; \
 	talosctl dmesg --talosconfig ./talosconfig -n $(WC_NODE1) -e $(WC_NODE1)
 
+wc-node2-install:
+	cd workload-cluster; \
+	talosctl apply-config --insecure -n $(WC_NODE2) -e $(WC_NODE2) --file controlplane.yaml
+
+wc-node3-install:
+	cd workload-cluster; \
+	talosctl apply-config --insecure -n $(WC_NODE3) -e $(WC_NODE3) --file controlplane.yaml
+
 wc-kubeconfig:
 	cd workload-cluster; \
  	talosctl kubeconfig --talosconfig ./talosconfig  -n $(WC_NODE1) -e $(WC_NODE1)
@@ -103,5 +113,7 @@ wc-install-spegel:
 	kubectl label namespace spegel pod-security.kubernetes.io/enforce=privileged
 	helm upgrade --namespace spegel --install --version v0.0.23 spegel oci://ghcr.io/spegel-org/helm-charts/spegel --set spegel.containerdRegistryConfigPath="/etc/cri/conf.d/hosts"
 	# TODO: add toleration (for now taint was removed)
+
+
 
 

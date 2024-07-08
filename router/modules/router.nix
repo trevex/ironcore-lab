@@ -73,6 +73,11 @@ let
       };
     };
   };
+  ironcoreOpts = {
+    options = {
+      enable = mkEnableOption "Ironcore";
+    };
+  };
 in
 {
   options = {
@@ -112,6 +117,10 @@ in
 
       apiserverProxy = mkOption {
         type = types.submodule apiserverProxyOpts;
+      };
+
+      ironcore = mkOption {
+        type = types.submodule ironcoreOpts;
       };
     };
   };
@@ -248,18 +257,17 @@ in
       frontend apiserver
         bind ${cfg.internalAddress}:6443
         mode tcp
-        option tcplog
         default_backend apiserver
 
       backend apiserver
         mode tcp
-        option tcplog
         option tcp-check
         balance roundrobin
         default-server inter 10s downinter 5s rise 2 fall 2 slowstart 60s maxconn 250 maxqueue 256 weight 100
         ${servers}
       '';
     };
+
 
     # NTP
     services.ntpd-rs = {
@@ -271,6 +279,50 @@ in
         synchronization.local-stratum = 17;
       };
     };
+
+
+    # Ironcore
+    systemd.services.metalbond = mkIf cfg.ironcore.enable {
+      description = "Ironcore metalbond daemon";
+      after = [ "network.target" ];
+      wantedBy = [ "multi-user.target" ];
+      serviceConfig = let
+        metalbond = with pkgs; buildGoModule rec {
+          pname = "metalbond";
+          version = "0.3.5";
+
+          src = fetchFromGitHub {
+            owner = "ironcore-dev";
+            repo = "metalbond";
+            rev = "refs/tags/v${version}";
+            hash = "sha256-uoWQCxemKwKUAjqCT2F+sGGjtcqCd7vsbJqey+dHW8Y=";
+          };
+
+          vendorHash = "sha256-rhL0cocqPmtJTBXo0i96xc9rdUpRXUnXZog87k0Pi/8=";
+
+          subPackages = [
+            "cmd"
+          ];
+
+          postInstall = ''
+            mv $out/bin/cmd $out/bin/metalbond
+          '';
+        };
+      in {
+        LimitNPROC = 512;
+        LimitNOFILE = 1048576;
+        CapabilityBoundingSet = "";
+        AmbientCapabilities = "";
+        NoNewPrivileges = true;
+        DynamicUser = true;
+        Type = "notify";
+        NotifyAccess = "main";
+        ExecStart = "${getBin metalbond}/bin/metalbond server --listen [${cfg.internalAddress}]:4711 --http [${cfg.internalAddress}]:4712 --keepalive 3";
+        Restart = "on-failure";
+        RestartKillSignal = "SIGHUP";
+      };
+    };
+
   };
 }
 

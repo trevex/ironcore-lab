@@ -41,8 +41,11 @@
       enable = true;
       endpoints = [
         "[fd00:cafe::6a1d:efff:fe45:2893]:6443"
+        "[fd00:cafe::6a1d:efff:fe3e:ee0c]:6443"
+        "[fd00:cafe::6a1d:efff:fe3f:90cc]:6443"
       ];
     };
+    ironcore.enable = true;
   };
 
   # some utility packages to debug things...
